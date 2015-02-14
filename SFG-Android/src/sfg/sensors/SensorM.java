@@ -11,8 +11,11 @@ import android.widget.TextView;
 public class SensorM {
 
 	private SensorManager mSensorManager;
-	private Sensor mSensor;
 	private Context context;
+	
+	private Gyroscope gyro;
+	private Accelerometer acc;
+	private Sensor gyroSensor, accSensor;
 	
 	public SensorM(Context context, Activity activity) {
 		this.context = context;
@@ -20,20 +23,25 @@ public class SensorM {
 		TextView accx = (TextView) activity.findViewById(R.id.accx);
 		TextView accy = (TextView) activity.findViewById(R.id.accy);
 		TextView accz = (TextView) activity.findViewById(R.id.accz);
-		 
+		gyro = new Gyroscope(accx, accy, accz);
+		
 		TextView gyrox = (TextView) activity.findViewById(R.id.gyrox);
 		TextView gyroy = (TextView) activity.findViewById(R.id.gyroy);
 		TextView gyroz = (TextView) activity.findViewById(R.id.gyroz);
+		acc = new Accelerometer(gyrox, gyroy, gyroz);
 		
 		mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-		mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		gyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+		accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 	}
 	
 	public void onResume() {
-		
+		mSensorManager.registerListener(gyro, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager.registerListener(acc, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
 	}
 	
 	public void onPause() {
-		
+		mSensorManager.unregisterListener(gyro, gyroSensor);
+		mSensorManager.unregisterListener(acc, accSensor);
 	}
 }

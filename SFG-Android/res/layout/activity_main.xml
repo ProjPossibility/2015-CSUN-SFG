@@ -18,7 +18,7 @@
             android:layout_marginLeft="10dip"
             android:layout_marginRight="5dip"
             android:text="Latitude: "
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
 
         <TextView
@@ -75,26 +75,26 @@
 
         <TextView
             android:id="@+id/accx"
-            android:layout_width="wrap_content"
+            android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:text="x"
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
         
         <TextView
             android:id="@+id/accy"
-            android:layout_width="wrap_content"
+            android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:text="y"
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
         
         <TextView
             android:id="@+id/accz"
-            android:layout_width="wrap_content"
+            android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:text="z"
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
     </LinearLayout>
     
@@ -117,26 +117,26 @@
 
         <TextView
             android:id="@+id/gyrox"
-            android:layout_width="wrap_content"
+            android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:text="x"
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
         
         <TextView
             android:id="@+id/gyroy"
-            android:layout_width="wrap_content"
+            android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:text="y"
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
         
         <TextView
             android:id="@+id/gyroz"
-            android:layout_width="wrap_content"
+            android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:text="z"
-            android:textSize="20dip" >
+            android:textSize="20dip">
         </TextView>
     </LinearLayout>
     
