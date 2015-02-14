@@ -11,15 +11,12 @@ import android.widget.TextView;
 public class SensorM {
 
 	private SensorManager mSensorManager;
-	private Context context;
 	
 	private Gyroscope gyro;
 	private Accelerometer acc;
 	private Sensor gyroSensor, accSensor;
 	
 	public SensorM(Context context, Activity activity) {
-		this.context = context;
-		
 		TextView accx = (TextView) activity.findViewById(R.id.accx);
 		TextView accy = (TextView) activity.findViewById(R.id.accy);
 		TextView accz = (TextView) activity.findViewById(R.id.accz);

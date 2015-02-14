@@ -27,7 +27,6 @@ public class Accelerometer implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		
 		x.setText(df.format(event.values[0])+",");
 		y.setText(df.format(event.values[1])+",");
 		z.setText(df.format(event.values[2]));

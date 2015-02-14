@@ -24,6 +24,7 @@ public class MainActivity extends Activity {
 		  TextView longitudeField = (TextView) findViewById(R.id.longitudevalue);
 		  location = new GPS(this, latituteField, longitudeField);
 		  
+		  //set up sensor manager
 		  sensorManager = new SensorM(this, this);
 	  }
 
