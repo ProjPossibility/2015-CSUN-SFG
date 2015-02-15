@@ -53,6 +53,11 @@ public class GPS implements LocationListener {
 		locationManager.removeUpdates(this);
 	}
 	
+	public void stopMilieage() {
+		totalDistanceTraveled += calculateDistanceTraveled();
+		latitudeField.setText(Float.toString(totalDistanceTraveled));
+	}
+	
 	@Override
 	public void onLocationChanged(Location location) {
 		listOfLocations.add(location);
