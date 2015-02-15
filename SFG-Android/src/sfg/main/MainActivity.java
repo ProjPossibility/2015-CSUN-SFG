@@ -123,7 +123,6 @@ public class MainActivity extends Activity implements OnInitListener {
 						if (System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
 							isAskingEndRun = true;
 							speakText("Yo Homeboy you slowin down, you sure about that dawg?");
-							
 						}
 					}
 				}
@@ -322,6 +321,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					Log.i(TAG, "no");
 					isAskingEndRun = false;
 					isAskingShareFacebook = false;
+					lastStepTakenAt = System.currentTimeMillis();
 				}
 
 				// else {
