@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import sfg.accessibility.VoiceEngineHelper;
 import sfg.accessibility.Voice_Engine;
@@ -357,7 +358,23 @@ public class MainActivity extends Activity implements OnInitListener {
 
 	private void textToSpeachEndRun() {
 		String distanceTraveled = df.format(location.getDistanceTraveled());
-		long timeOfRun = endTime - startTime * 1000;
+		long timeOfRunInMilli = endTime - startTime;
+		long totalHours = TimeUnit.MILLISECONDS.toHours(timeOfRunInMilli);
+		long totalMinutes = TimeUnit.MILLISECONDS.toMinutes(timeOfRunInMilli);
+		long totalSeconds = TimeUnit.MILLISECONDS.toSeconds(timeOfRunInMilli);
+		String timeOfRun;
+		if(totalHours != 0) {
+			if(totalHours == 1) {
+				timeOfRun = totalHours + " hour ";
+			}
+			else {
+				timeOfRun = totalHours + " hours ";
+			}
+			timeOfRun = timeOfRun + ", " + totalMinutes + " minutes and " + totalSeconds + " seconds";
+		}
+		else {
+			timeOfRun = ", " + totalMinutes + " minutes and " + totalSeconds + " seconds";
+		}
 		speakText("You have run " + distanceTraveled + "meters in " + timeOfRun + "Would you like to share results to a friend on FaceBook?");
 		
 	}
