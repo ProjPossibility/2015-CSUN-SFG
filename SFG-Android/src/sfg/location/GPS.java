@@ -3,6 +3,8 @@ package sfg.location;
 import java.util.ArrayList;
 import java.util.List;
 
+import sfg.sensors.SensorM;
+import android.app.Activity;
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
@@ -13,7 +15,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 public class GPS implements LocationListener {
-
+	
 	private TextView latitudeField, longitudeField;
 	private LocationManager locationManager;
 	private String provider;
@@ -56,6 +58,8 @@ public class GPS implements LocationListener {
 	public void stopMilieage() {
 		totalDistanceTraveled += calculateDistanceTraveled();
 		latitudeField.setText(Float.toString(totalDistanceTraveled));
+		longitudeField.setText("finished");
+		listOfLocations.clear();
 	}
 	
 	@Override
@@ -94,6 +98,11 @@ public class GPS implements LocationListener {
 		for(int i = 0; i < listOfLocations.size() - 1; i++)
 			total += listOfLocations.get(i).distanceTo(listOfLocations.get(i+1));
 		return total;
+	}
+
+	public float getDistanceTraveled() {
+		return totalDistanceTraveled;
+		
 	}
 	
 }

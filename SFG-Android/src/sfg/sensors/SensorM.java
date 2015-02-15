@@ -20,12 +20,12 @@ public class SensorM {
 		TextView accx = (TextView) activity.findViewById(R.id.accx);
 		TextView accy = (TextView) activity.findViewById(R.id.accy);
 		TextView accz = (TextView) activity.findViewById(R.id.accz);
-		gyro = new Gyroscope(accx, accy, accz);
+		gyro = new Gyroscope(activity, accx, accy, accz);
 		
 		TextView gyrox = (TextView) activity.findViewById(R.id.gyrox);
 		TextView gyroy = (TextView) activity.findViewById(R.id.gyroy);
 		TextView gyroz = (TextView) activity.findViewById(R.id.gyroz);
-		acc = new Accelerometer(gyrox, gyroy, gyroz);
+		acc = new Accelerometer(activity, gyrox, gyroy, gyroz);
 		
 		mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 		gyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);

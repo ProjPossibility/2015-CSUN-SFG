@@ -1,5 +1,6 @@
 package sfg.main;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,11 @@ import android.speech.tts.TextToSpeech.OnInitListener;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.view.WindowManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.hardware.camera2.TotalCaptureResult;
 import android.widget.TextView;
 
 import com.newbillity.sfg_android.R;
@@ -54,15 +60,75 @@ public class MainActivity extends Activity implements OnInitListener {
 	private boolean isConnected = false;
 	private boolean isWarningSound;
 
+	// accelerometer stuff
+	private SensorManager mSensorManager;
+	private Sensor acc;
+	private SensorEventListener accListener;
+	private TextView xField, yField, zField;
+	private float xAcc, yAcc, zAcc;
+	private DecimalFormat df;
+	private long startTime;
+	private long endTime;
+
+	private boolean hasStartedRunning = false;
+	private static final int TIME_UNTIL_END_RUN_PROMPT = 10 * 1000;
+	private long lastStepTakenAt;
+
+	private boolean isAskingShareFacebook = false;
+	private boolean isAskingEndRun = false;
+	
+	private static final int RUN_THRESHOLD = 17;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		
-		// set up sensor manager
-		sensorManager = new SensorM(this, this);
+
+		// accelerometer stuff
+		df = new DecimalFormat("#.##");
+		xField = (TextView) findViewById(R.id.accx);
+		yField = (TextView) findViewById(R.id.accy);
+		zField = (TextView) findViewById(R.id.accz);
+		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		acc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		accListener = new SensorEventListener() {
+			@Override
+			public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+			}
+
+			@Override
+			public void onSensorChanged(SensorEvent event) {
+				xAcc = event.values[0];
+				yAcc = event.values[1];
+				zAcc = event.values[2];
+
+				xField.setText(df.format(event.values[0]) + ",");
+				yField.setText(df.format(event.values[1]) + ",");
+				zField.setText(df.format(event.values[2]));
+
+				if (!hasStartedRunning && zAcc > RUN_THRESHOLD) {// start the
+																	// run
+					startTime = System.currentTimeMillis();
+					hasStartedRunning = true;
+					lastStepTakenAt = System.currentTimeMillis();
+				}
+
+				if (hasStartedRunning) {
+					if (zAcc > RUN_THRESHOLD) {
+						lastStepTakenAt = System.currentTimeMillis();
+					} else {
+						if (System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
+							isAskingEndRun = true;
+							speakText("Yo Homeboy, you slowin down, you sure about that dawg?");
+							startVoiceRecognition();
+						}
+					}
+				}
+			}
+		};
 
 		// tts create code
 		textToSpeech = new TextToSpeech(this, this);
@@ -75,27 +141,27 @@ public class MainActivity extends Activity implements OnInitListener {
 				speakText("hELLO");
 			}
 		}, 2000);
-
-		// Intent intent = new Intent(MainActivity.this, Voice_Engine.class);
-		// startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if(location != null)
+		if (location != null)
 			location.onResume();
-		
-		sensorManager.onResume();
+
+		// sensorManager.onResume();
+		// mSensorManager.registerListener(accListener, acc,
+		// SensorManager.SENSOR_DELAY_NORMAL);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if(location != null)
+		if (location != null)
 			location.onPause();
-		
-		sensorManager.onPause();
+
+		// sensorManager.onPause();
+		// mSensorManager.unregisterListener(accListener, acc);
 
 		Log.d(TAG, "onPause()");
 		if ((isVoice == true) && (textToSpeech.isSpeaking() == true)) {
@@ -238,37 +304,89 @@ public class MainActivity extends Activity implements OnInitListener {
 						|| matches.contains("and runs")
 						|| matches.contains("end")) {
 					Log.i(TAG, "end run");
-				}
-//				else {
-//					Log.i(TAG, "nothing capture, starting again");
-//					mHandler.postDelayed(new Runnable() {
-//						public void run() {
-//							Log.i(TAG, "handler called");
-//							enableVoiceEngine();
-//							startVoiceRecognition();
-//						}
-//					}, 2000);
-//				}
-				Log.i(TAG, "nothing capture, starting again");
-				mHandler.postDelayed(new Runnable() {
-					public void run() {
-						Log.i(TAG, "handler called");
-						enableVoiceEngine();
+				} else if (matches.contains("yes")) {
+					Log.i(TAG, "yes");
+					if(isAskingEndRun) {
+						boolean showFacebookSendRunInfo = true;
+						endTime = System.currentTimeMillis();
+						stopTrackingMilieage();
+						TextToSpeachEndRun();
+						isAskingShareFacebook = true;
+						isAskingEndRun = false;
 						startVoiceRecognition();
 					}
-				}, 2000);
+					else if(isAskingShareFacebook) {
+						Intent facebookIntent = getShareIntent(
+								"facebook",
+								"CamAcc",
+								"CamAcc is a great photo capturing and "
+										+ "sharing application aimed for the Blind "
+										+ "and visually impaired. Check it out!");
+						startActivity(facebookIntent);
+						isAskingShareFacebook = false;
+					}
+
+				} else if (matches.contains("no")) {
+					Log.i(TAG, "no");
+					isAskingEndRun = false;
+					isAskingShareFacebook = false;
+				}
+
+				// else {
+				// Log.i(TAG, "nothing capture, starting again");
+				// mHandler.postDelayed(new Runnable() {
+				// public void run() {
+				// Log.i(TAG, "handler called");
+				// enableVoiceEngine();
+				// startVoiceRecognition();
+				// }
+				// }, 2000);
+				// }
+				// Log.i(TAG, "nothing capture, starting again");
+				// mHandler.postDelayed(new Runnable() {
+				// public void run() {
+				// Log.i(TAG, "handler called");
+				// enableVoiceEngine();
+				// startVoiceRecognition();
+				// }
+				// }, 2000);
 			}
+		} else {
+			Log.i(TAG, "VR == canceled");
+			// mHandler.postDelayed(new Runnable() {
+			// public void run() {
+			// Log.i(TAG, "handler in VR == canceled called");
+			// enableVoiceEngine();
+			// startVoiceRecognition();
+			// }
+			// }, 2000);
 		}
+	}
+
+	private void TextToSpeachEndRun() {
+		String distanceTraveled = df.format(location.getDistanceTraveled());
+		long timeOfRun = endTime - startTime * 1000;
+		speakText("You have run " + distanceTraveled + "meters in " + timeOfRun);
+		speakText("Would you like to share results to a friend on FaceBook?");
+	}
+
+	private void SendFacebookMessage() {
+		Intent facebookIntent = getShareIntent("facebook", "CamAcc",
+				"CamAcc is a great photo capturing and "
+						+ "sharing application aimed for the Blind "
+						+ "and visually impaired. Check it out!");
+		startActivity(facebookIntent);
+
 	}
 
 	private void disableVoiceEngine() {
 		try {
 			VoiceEngineHelper.setVoiceController(true);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			Log.e(TAG, "disable voice engine error");
 		}
 	}
-	
+
 	/**
 	 * Enables the VoiceEngine. When
 	 * VoiceEngineHelper.setVoiceController(false), voice engine is active,
@@ -359,55 +477,60 @@ public class MainActivity extends Activity implements OnInitListener {
 		TextView latituteField = (TextView) findViewById(R.id.latitudevalue);
 		TextView longitudeField = (TextView) findViewById(R.id.longitudevalue);
 		location = new GPS(this, latituteField, longitudeField);
+
+		mSensorManager.registerListener(accListener, acc,
+				SensorManager.SENSOR_DELAY_NORMAL);
+
 	}
-	
+
 	public void stopTrackingMilieage() {
-		if(location != null)
+		if (location != null)
 			location.stopMilieage();
 		location.onPause();
 		location = null;
+
+		mSensorManager.unregisterListener(accListener, acc);
 	}
-	
+
 	public void startVoiceRecognition() {
 		Log.d(TAG, "Starting Voice_Engine");
-		Intent intent = new Intent(MainActivity.this,
-				Voice_Engine.class);
-		startActivityForResult(intent,
-				VOICE_RECOGNITION_REQUEST_CODE);
+		Intent intent = new Intent(MainActivity.this, Voice_Engine.class);
+		startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
 	}
-	
+
 	public boolean hasInternetAccess() {
 		ConnectivityManager cm = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 		return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 	}
-	
-	//user function
-	    private Intent getShareIntent(String type, String subject, String text) {
-	        boolean found = false;
-	        Intent share = new Intent(android.content.Intent.ACTION_SEND);
-	        share.setType("text/plain");
 
-	        // gets the list of intents that can be loaded.
-	        List<ResolveInfo> resInfo = this.getPackageManager()
-	                .queryIntentActivities(share, 0);
-	        System.out.println("resinfo: " + resInfo);
-	        if (!resInfo.isEmpty()) {
-	            for (ResolveInfo info : resInfo) {
-	                if (info.activityInfo.packageName.toLowerCase().contains(type)
-	                        || info.activityInfo.name.toLowerCase().contains(type)) {
-	                    share.putExtra(Intent.EXTRA_SUBJECT, subject);
-	                    share.putExtra(Intent.EXTRA_TEXT, text);
-	                    share.setPackage(info.activityInfo.packageName);
-	                    found = true;
-	                    break;
-	                }
-	            }
-	            if (!found)
-	                return null;
-	            return share;
-	        }
-	        return null;
-	    } // end getShareIntent()
+	// user function
+	private Intent getShareIntent(String type, String subject, String text) {
+		boolean found = false;
+		Intent share = new Intent(android.content.Intent.ACTION_SEND);
+		share.setType("text/plain");
+
+		// gets the list of intents that can be loaded.
+		List<ResolveInfo> resInfo = this.getPackageManager()
+				.queryIntentActivities(share, 0);
+		System.out.println("resinfo: " + resInfo);
+		if (!resInfo.isEmpty()) {
+			for (ResolveInfo info : resInfo) {
+				if (info.activityInfo.packageName.toLowerCase().contains(type)
+						|| info.activityInfo.name.toLowerCase().contains(type)) {
+					share.putExtra(Intent.EXTRA_SUBJECT, subject);
+					share.putExtra(Intent.EXTRA_TEXT, text);
+					share.setPackage(info.activityInfo.packageName);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				return null;
+			return share;
+		}
+		return null;
+	} // end getShareIntent()
+
 }
