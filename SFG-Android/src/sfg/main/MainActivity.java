@@ -311,6 +311,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					Log.i(TAG, "yes");
 					if(isAskingEndRun) {
 						endTime = System.currentTimeMillis();
+						location.clearBuffer();
 						textToSpeachEndRun();
 						stopTrackingMilieage();
 						isAskingShareFacebook = true;
