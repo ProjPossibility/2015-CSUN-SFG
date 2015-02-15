@@ -2,15 +2,18 @@ package sfg.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
-
-import com.newbillity.sfg_android.R;
 
 import sfg.accessibility.VoiceEngineHelper;
 import sfg.accessibility.Voice_Engine;
 import sfg.io.PreferencesHelper;
 import sfg.location.GPS;
 import sfg.sensors.SensorM;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -21,10 +24,9 @@ import android.speech.tts.TextToSpeech.OnInitListener;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.view.WindowManager;
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.widget.TextView;
+
+import com.newbillity.sfg_android.R;
 
 public class MainActivity extends Activity implements OnInitListener {
 
@@ -380,4 +382,32 @@ public class MainActivity extends Activity implements OnInitListener {
 		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 		return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 	}
+	
+	//user function
+	    private Intent getShareIntent(String type, String subject, String text) {
+	        boolean found = false;
+	        Intent share = new Intent(android.content.Intent.ACTION_SEND);
+	        share.setType("text/plain");
+
+	        // gets the list of intents that can be loaded.
+	        List<ResolveInfo> resInfo = this.getPackageManager()
+	                .queryIntentActivities(share, 0);
+	        System.out.println("resinfo: " + resInfo);
+	        if (!resInfo.isEmpty()) {
+	            for (ResolveInfo info : resInfo) {
+	                if (info.activityInfo.packageName.toLowerCase().contains(type)
+	                        || info.activityInfo.name.toLowerCase().contains(type)) {
+	                    share.putExtra(Intent.EXTRA_SUBJECT, subject);
+	                    share.putExtra(Intent.EXTRA_TEXT, text);
+	                    share.setPackage(info.activityInfo.packageName);
+	                    found = true;
+	                    break;
+	                }
+	            }
+	            if (!found)
+	                return null;
+	            return share;
+	        }
+	        return null;
+	    } // end getShareIntent()
 }
