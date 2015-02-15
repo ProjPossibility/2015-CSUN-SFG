@@ -3,8 +3,6 @@ package sfg.location;
 import java.util.ArrayList;
 import java.util.List;
 
-import sfg.sensors.SensorM;
-import android.app.Activity;
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
@@ -25,6 +23,8 @@ public class GPS implements LocationListener {
 	private float totalDistanceTraveled = 0;
 	public static final int MAX_LOCATION_BUFFER = 50;
 	
+	public static final double RADIUS = 6372797.560856;
+	
 	public GPS(Context context, TextView lat, TextView longitude) {
 		this.latitudeField = lat;
 		this.longitudeField = longitude;
@@ -40,7 +40,7 @@ public class GPS implements LocationListener {
 		//initialize the location fields
 		if(location != null) {
 			Log.i("sfg", "Provider " + provider + " has been selected.");
-			onLocationChanged(location);
+			//onLocationChanged(location);
 		}
 		else {
 			latitudeField.setText("Location not available");
@@ -94,10 +94,17 @@ public class GPS implements LocationListener {
 		Log.i("sfg", "Disabled provider " + provider);
 	}
 	
+	public void clearBuffer() {
+		totalDistanceTraveled += calculateDistanceTraveled();
+		listOfLocations.clear();
+	}
+	
 	public float calculateDistanceTraveled() {
 		float total = 0;
 		for(int i = 0; i < listOfLocations.size() - 1; i++) {
-			total += gps2m(listOfLocations.get(i).getLatitude(), listOfLocations.get(i).getLongitude(), listOfLocations.get(i+1).getLatitude(), listOfLocations.get(i+1).getLongitude());
+			//total += calculationByDistance(listOfLocations.get(i), listOfLocations.get(i+1));
+			total += listOfLocations.get(i).distanceTo(listOfLocations.get(i+1));
+			Log.i("sfg", ""+total);
 			longitudeField.setText(Float.toString(total));
 		}
 		return total;
@@ -105,22 +112,20 @@ public class GPS implements LocationListener {
 
 	public float getDistanceTraveled() {
 		return totalDistanceTraveled;
-		
 	}
 	
-	private float gps2m(double lat_a, double lng_a, double lat_b, double lng_b) {
-	    float pk = (float) (180/Math.PI);
-	    float a1 = (float) lat_a / pk;
-	    float a2 = (float) lng_a / pk;
-	    float b1 = (float) lat_b / pk;
-	    float b2 = (float) lng_b / pk;
-
-	    float t1 = FloatMath.cos(a1) * FloatMath.cos(a2) * FloatMath.cos(b1) * FloatMath.cos(b2);
-	    float t2 = FloatMath.cos(a1) * FloatMath.sin(a2) * FloatMath.cos(b1) * FloatMath.sin(b2);
-	    float t3 = FloatMath.sin(a1) * FloatMath.sin(b1);
-	    double tt = Math.acos(t1 + t2 + t3);
-
-	    return (float) (6366000*tt);
-	}
+	public double calculationByDistance(Location StartP, Location EndP) {  
+	      double lat1 = StartP.getLatitude()/1E6;
+	      double lat2 = EndP.getLatitude()/1E6;
+	      double lon1 = StartP.getLongitude()/1E6;
+	      double lon2 = EndP.getLongitude()/1E6;
+	      double dLat = Math.toRadians(lat2-lat1);  
+	      double dLon = Math.toRadians(lon2-lon1);  
+	      double a = Math.sin(dLat/2) * Math.sin(dLat/2) +  
+	         Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *  
+	         Math.sin(dLon/2) * Math.sin(dLon/2);  
+	      double c = 2 * Math.asin(Math.sqrt(a));  
+	      return RADIUS * c;  
+	   }  
 	
 }
