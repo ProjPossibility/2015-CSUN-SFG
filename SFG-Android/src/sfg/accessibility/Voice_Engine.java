@@ -27,6 +27,7 @@ public class Voice_Engine extends Activity {
     public static Voice_Engine singletonVE = new Voice_Engine();
     
     private SpeechRecognizer sr = SpeechRecognizer.createSpeechRecognizer(this);
+    private Intent voiceOptions;
     
     /**
      *The Voice engine call is always destroyed if it is interrupted and
@@ -38,6 +39,14 @@ public class Voice_Engine extends Activity {
     {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
+        //set options for voice recognition
+    	voiceOptions = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        voiceOptions.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); //LANGUAGE_MODEL_WEB_SEARCH
+        voiceOptions.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplication().getClass().getName());
+        voiceOptions.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
+        voiceOptions.putExtra(RecognizerIntent.EXTRA_PROMPT, "Please say a command");
+        voiceOptions.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 4000);
         
         //this allows this class to be closed from another Activity
         singletonVE = this;
@@ -51,13 +60,7 @@ public class Voice_Engine extends Activity {
         if (VoiceEngineHelper.getVoiceController() == false) {
             speakingInterrupted = false;
             sr.setRecognitionListener(new listener());
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); //LANGUAGE_MODEL_WEB_SEARCH
-            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplication().getClass().getName());
-            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Please say a command");
-            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 4000);
-            sr.startListening(intent);
+            startListening();
         } else {
             speakingInterrupted = false;
         	sr.stopListening();
@@ -67,6 +70,10 @@ public class Voice_Engine extends Activity {
 
     } //end onCreate
 
+    public void startListening() {
+        sr.startListening(voiceOptions);
+    }
+    
      /**
      *
      */
@@ -137,10 +144,13 @@ public class Voice_Engine extends Activity {
         	
         	//only continue listening if voiceController is not active
         	if (VoiceEngineHelper.getVoiceController() == false) {	
+        		Log.i(TAG, "voice controller == false");
                 sr.cancel();
-                Intent intent = new Intent();
-                sr.startListening(intent);
+                //Intent intent = new Intent();
+                //sr.startListening(intent);
+                startListening();
         	} else {
+        		Log.i(TAG, "voice controller == true");
         		sr.stopListening();
                 sr.destroy();
                 finish();

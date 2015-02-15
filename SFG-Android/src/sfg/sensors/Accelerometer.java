@@ -2,6 +2,7 @@ package sfg.sensors;
 
 import java.text.DecimalFormat;
 
+import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,13 +10,20 @@ import android.widget.TextView;
 
 public class Accelerometer implements SensorEventListener {
 
-	private TextView x, y, z;
+	private Activity activity;
+	private TextView xField, yField, zField;
+	public float x, y, z;
 	private DecimalFormat df;
 	
-	public Accelerometer(TextView x, TextView y, TextView z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
+	private boolean hasStartedRunning = false;
+	private static final int TIME_UNTIL_END_RUN_PROMPT = 10 * 1000;
+	private long lastStepTakenAt;
+	
+	public Accelerometer(Activity activity, TextView x, TextView y, TextView z) {
+		this.activity = activity;
+		this.xField = x;
+		this.yField = y;
+		this.zField = z;
 		
 		df = new DecimalFormat("#.##");
 	}
@@ -27,9 +35,24 @@ public class Accelerometer implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		x.setText(df.format(event.values[0])+",");
-		y.setText(df.format(event.values[1])+",");
-		z.setText(df.format(event.values[2]));
+		this.x = event.values[0];
+		this.y = event.values[1];
+		this.z = event.values[2];
+		
+		xField.setText(df.format(event.values[0])+",");
+		yField.setText(df.format(event.values[1])+",");
+		zField.setText(df.format(event.values[2]));
+		
+		if(hasStartedRunning) {
+		    if(z > 18) {
+		        lastStepTakenAt = System.currentTimeMillis();
+		   }
+		   else {
+		        if(System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
+		            //activity.stopTrackingMileage();
+		        }
+		   }
+		}
 	}
 
 }

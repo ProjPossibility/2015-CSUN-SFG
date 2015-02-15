@@ -1,5 +1,6 @@
 package sfg.main;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -24,6 +25,10 @@ import android.view.WindowManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnInitListener {
@@ -52,15 +57,65 @@ public class MainActivity extends Activity implements OnInitListener {
 	private boolean isConnected = false;
 	private boolean isWarningSound;
 
+	// accelerometer stuff
+	private SensorManager mSensorManager;
+	private Sensor acc;
+	private SensorEventListener accListener;
+	private TextView xField, yField, zField;
+	private float xAcc, yAcc, zAcc;
+	private DecimalFormat df;
+
+	private boolean hasStartedRunning = false;
+	private static final int TIME_UNTIL_END_RUN_PROMPT = 10 * 1000;
+	private long lastStepTakenAt;
+	private static final int RUN_THRESHOLD = 17;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		
-		// set up sensor manager
-		sensorManager = new SensorM(this, this);
+
+		// accelerometer stuff
+		df = new DecimalFormat("#.##");
+		xField = (TextView) findViewById(R.id.accx);
+		yField = (TextView) findViewById(R.id.accy);
+		zField = (TextView) findViewById(R.id.accz);
+		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		acc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		accListener = new SensorEventListener() {
+			@Override
+			public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+			}
+
+			@Override
+			public void onSensorChanged(SensorEvent event) {
+				xAcc = event.values[0];
+				yAcc = event.values[1];
+				zAcc = event.values[2];
+
+				xField.setText(df.format(event.values[0]) + ",");
+				yField.setText(df.format(event.values[1]) + ",");
+				zField.setText(df.format(event.values[2]));
+
+				if (!hasStartedRunning && zAcc > RUN_THRESHOLD) {
+					hasStartedRunning = true;
+					lastStepTakenAt = System.currentTimeMillis();
+				}
+
+				if (hasStartedRunning) {
+					if (zAcc > RUN_THRESHOLD) {
+						lastStepTakenAt = System.currentTimeMillis();
+					} else {
+						if (System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
+							stopTrackingMilieage();
+						}
+					}
+				}
+			}
+		};
 
 		// tts create code
 		textToSpeech = new TextToSpeech(this, this);
@@ -73,27 +128,26 @@ public class MainActivity extends Activity implements OnInitListener {
 				speakText("hELLO");
 			}
 		}, 2000);
-
-		// Intent intent = new Intent(MainActivity.this, Voice_Engine.class);
-		// startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if(location != null)
+		if (location != null)
 			location.onResume();
-		
-		sensorManager.onResume();
+
+		// sensorManager.onResume();
+		//mSensorManager.registerListener(accListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if(location != null)
+		if (location != null)
 			location.onPause();
-		
-		sensorManager.onPause();
+
+		// sensorManager.onPause();
+		//mSensorManager.unregisterListener(accListener, acc);
 
 		Log.d(TAG, "onPause()");
 		if ((isVoice == true) && (textToSpeech.isSpeaking() == true)) {
@@ -237,36 +291,45 @@ public class MainActivity extends Activity implements OnInitListener {
 						|| matches.contains("end")) {
 					Log.i(TAG, "end run");
 				}
-//				else {
-//					Log.i(TAG, "nothing capture, starting again");
-//					mHandler.postDelayed(new Runnable() {
-//						public void run() {
-//							Log.i(TAG, "handler called");
-//							enableVoiceEngine();
-//							startVoiceRecognition();
-//						}
-//					}, 2000);
-//				}
-				Log.i(TAG, "nothing capture, starting again");
-				mHandler.postDelayed(new Runnable() {
-					public void run() {
-						Log.i(TAG, "handler called");
-						enableVoiceEngine();
-						startVoiceRecognition();
-					}
-				}, 2000);
+				// else {
+				// Log.i(TAG, "nothing capture, starting again");
+				// mHandler.postDelayed(new Runnable() {
+				// public void run() {
+				// Log.i(TAG, "handler called");
+				// enableVoiceEngine();
+				// startVoiceRecognition();
+				// }
+				// }, 2000);
+				// }
+				// Log.i(TAG, "nothing capture, starting again");
+				// mHandler.postDelayed(new Runnable() {
+				// public void run() {
+				// Log.i(TAG, "handler called");
+				// enableVoiceEngine();
+				// startVoiceRecognition();
+				// }
+				// }, 2000);
 			}
+		} else {
+			Log.i(TAG, "VR == canceled");
+			// mHandler.postDelayed(new Runnable() {
+			// public void run() {
+			// Log.i(TAG, "handler in VR == canceled called");
+			// enableVoiceEngine();
+			// startVoiceRecognition();
+			// }
+			// }, 2000);
 		}
 	}
 
 	private void disableVoiceEngine() {
 		try {
 			VoiceEngineHelper.setVoiceController(true);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			Log.e(TAG, "disable voice engine error");
 		}
 	}
-	
+
 	/**
 	 * Enables the VoiceEngine. When
 	 * VoiceEngineHelper.setVoiceController(false), voice engine is active,
@@ -357,27 +420,31 @@ public class MainActivity extends Activity implements OnInitListener {
 		TextView latituteField = (TextView) findViewById(R.id.latitudevalue);
 		TextView longitudeField = (TextView) findViewById(R.id.longitudevalue);
 		location = new GPS(this, latituteField, longitudeField);
+
+		mSensorManager.registerListener(accListener, acc, SensorManager.SENSOR_DELAY_NORMAL);
+		
 	}
-	
+
 	public void stopTrackingMilieage() {
-		if(location != null)
+		if (location != null)
 			location.stopMilieage();
 		location.onPause();
 		location = null;
+
+		mSensorManager.unregisterListener(accListener, acc);
 	}
-	
+
 	public void startVoiceRecognition() {
 		Log.d(TAG, "Starting Voice_Engine");
-		Intent intent = new Intent(MainActivity.this,
-				Voice_Engine.class);
-		startActivityForResult(intent,
-				VOICE_RECOGNITION_REQUEST_CODE);
+		Intent intent = new Intent(MainActivity.this, Voice_Engine.class);
+		startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
 	}
-	
+
 	public boolean hasInternetAccess() {
 		ConnectivityManager cm = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 		return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 	}
+
 }
