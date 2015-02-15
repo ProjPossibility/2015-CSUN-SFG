@@ -116,14 +116,14 @@ public class MainActivity extends Activity implements OnInitListener {
 					lastStepTakenAt = System.currentTimeMillis();
 				}
 
-				if (hasStartedRunning) {
+				if (hasStartedRunning && !isAskingEndRun) {
 					if (zAcc > RUN_THRESHOLD) {
 						lastStepTakenAt = System.currentTimeMillis();
 					} else {
 						if (System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
 							isAskingEndRun = true;
-							speakText("Yo Homeboy, you slowin down, you sure about that dawg?");
-							startVoiceRecognition();
+							speakText("Yo Homeboy you slowin down, you sure about that dawg?");
+							
 						}
 					}
 				}
@@ -307,22 +307,14 @@ public class MainActivity extends Activity implements OnInitListener {
 				} else if (matches.contains("yes")) {
 					Log.i(TAG, "yes");
 					if(isAskingEndRun) {
-						boolean showFacebookSendRunInfo = true;
 						endTime = System.currentTimeMillis();
+						textToSpeachEndRun();
 						stopTrackingMilieage();
-						TextToSpeachEndRun();
 						isAskingShareFacebook = true;
 						isAskingEndRun = false;
-						startVoiceRecognition();
 					}
 					else if(isAskingShareFacebook) {
-						Intent facebookIntent = getShareIntent(
-								"facebook",
-								"CamAcc",
-								"CamAcc is a great photo capturing and "
-										+ "sharing application aimed for the Blind "
-										+ "and visually impaired. Check it out!");
-						startActivity(facebookIntent);
+						sendFacebookMessage();
 						isAskingShareFacebook = false;
 					}
 
@@ -363,14 +355,14 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 	}
 
-	private void TextToSpeachEndRun() {
+	private void textToSpeachEndRun() {
 		String distanceTraveled = df.format(location.getDistanceTraveled());
 		long timeOfRun = endTime - startTime * 1000;
-		speakText("You have run " + distanceTraveled + "meters in " + timeOfRun);
-		speakText("Would you like to share results to a friend on FaceBook?");
+		speakText("You have run " + distanceTraveled + "meters in " + timeOfRun + "Would you like to share results to a friend on FaceBook?");
+		
 	}
 
-	private void SendFacebookMessage() {
+	private void sendFacebookMessage() {
 		Intent facebookIntent = getShareIntent("facebook", "CamAcc",
 				"CamAcc is a great photo capturing and "
 						+ "sharing application aimed for the Blind "
