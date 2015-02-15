@@ -75,8 +75,11 @@ public class MainActivity extends Activity implements OnInitListener {
 	private static final int TIME_UNTIL_END_RUN_PROMPT = 10 * 1000;
 	private long lastStepTakenAt;
 
+	//ui/voice recog stuff
 	private boolean isAskingShareFacebook = false;
 	private boolean isAskingEndRun = false;
+	private String timeOfRun;
+	private String distanceTraveled;
 	
 	private static final int RUN_THRESHOLD = 17;
 
@@ -357,12 +360,11 @@ public class MainActivity extends Activity implements OnInitListener {
 	}
 
 	private void textToSpeachEndRun() {
-		String distanceTraveled = df.format(location.getDistanceTraveled());
+		distanceTraveled = df.format(location.getDistanceTraveled());
 		long timeOfRunInMilli = endTime - startTime;
 		long totalHours = TimeUnit.MILLISECONDS.toHours(timeOfRunInMilli);
 		long totalMinutes = TimeUnit.MILLISECONDS.toMinutes(timeOfRunInMilli);
 		long totalSeconds = TimeUnit.MILLISECONDS.toSeconds(timeOfRunInMilli);
-		String timeOfRun;
 		if(totalHours != 0) {
 			if(totalHours == 1) {
 				timeOfRun = totalHours + " hour ";
@@ -375,15 +377,14 @@ public class MainActivity extends Activity implements OnInitListener {
 		else {
 			timeOfRun = ", " + totalMinutes + " minutes and " + totalSeconds + " seconds";
 		}
-		speakText("You have run " + distanceTraveled + "meters in " + timeOfRun + "Would you like to share results to a friend on FaceBook?");
+		speakText("You have run " + distanceTraveled + " meters in " + timeOfRun + "Would you like to share results to a friend on FaceBook?");
 		
 	}
 
 	private void sendFacebookMessage() {
-		Intent facebookIntent = getShareIntent("facebook", "CamAcc",
-				"CamAcc is a great photo capturing and "
-						+ "sharing application aimed for the Blind "
-						+ "and visually impaired. Check it out!");
+		Intent facebookIntent = getShareIntent("facebook", "RunFit Assist",
+				"RunFit Assist has helped me run " + distanceTraveled + " meters in " + 
+						timeOfRun);
 		startActivity(facebookIntent);
 
 	}
