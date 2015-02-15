@@ -55,7 +55,6 @@ public class MainActivity extends Activity implements OnInitListener {
 	private boolean isVoice;
 	private String sharedPrefVoice;
 
-	private PreferencesHelper prefHelper;
 
 	// important to use with VR
 	private boolean isConnected = false;
@@ -81,6 +80,9 @@ public class MainActivity extends Activity implements OnInitListener {
 	private String timeOfRun;
 	private String distanceTraveled;
 	
+	//achievements
+	private PreferencesHelper prefHelper;
+	
 	private static final int RUN_THRESHOLD = 17;
 
 	@Override
@@ -88,6 +90,7 @@ public class MainActivity extends Activity implements OnInitListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		prefHelper = new PreferencesHelper(this);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		// accelerometer stuff
@@ -284,7 +287,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						|| matches.contains("action")
 						|| matches.contains("auctions")) {
 					Log.i(TAG, "options");
-					speakText("commands,start run,pause ")
+					//speakText("commands,start run,pause ")
 				} else if (matches.contains("start run")
 						|| matches.contains("start")
 						|| matches.contains("start to run")
@@ -315,6 +318,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						location.clearBuffer();
 						textToSpeachEndRun();
 						stopTrackingMilieage();
+						checkForAchievements();
 						isAskingShareFacebook = true;
 						isAskingEndRun = false;
 					}
@@ -361,6 +365,12 @@ public class MainActivity extends Activity implements OnInitListener {
 			// }
 			// }, 2000);
 		}
+	}
+
+	private void checkForAchievements() {
+		if(distance > 400)
+			prefHelper.addAchievement(Achievements., value)
+		
 	}
 
 	private void textToSpeachEndRun() {
