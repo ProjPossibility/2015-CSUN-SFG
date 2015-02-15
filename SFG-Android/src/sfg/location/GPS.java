@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.FloatMath;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -95,14 +96,31 @@ public class GPS implements LocationListener {
 	
 	public float calculateDistanceTraveled() {
 		float total = 0;
-		for(int i = 0; i < listOfLocations.size() - 1; i++)
-			total += listOfLocations.get(i).distanceTo(listOfLocations.get(i+1));
+		for(int i = 0; i < listOfLocations.size() - 1; i++) {
+			total += gps2m(listOfLocations.get(i).getLatitude(), listOfLocations.get(i).getLongitude(), listOfLocations.get(i+1).getLatitude(), listOfLocations.get(i+1).getLongitude());
+			longitudeField.setText(Float.toString(total));
+		}
 		return total;
 	}
 
 	public float getDistanceTraveled() {
 		return totalDistanceTraveled;
 		
+	}
+	
+	private float gps2m(double lat_a, double lng_a, double lat_b, double lng_b) {
+	    float pk = (float) (180/Math.PI);
+	    float a1 = (float) lat_a / pk;
+	    float a2 = (float) lng_a / pk;
+	    float b1 = (float) lat_b / pk;
+	    float b2 = (float) lng_b / pk;
+
+	    float t1 = FloatMath.cos(a1) * FloatMath.cos(a2) * FloatMath.cos(b1) * FloatMath.cos(b2);
+	    float t2 = FloatMath.cos(a1) * FloatMath.sin(a2) * FloatMath.cos(b1) * FloatMath.sin(b2);
+	    float t3 = FloatMath.sin(a1) * FloatMath.sin(b1);
+	    double tt = Math.acos(t1 + t2 + t3);
+
+	    return (float) (6366000*tt);
 	}
 	
 }
