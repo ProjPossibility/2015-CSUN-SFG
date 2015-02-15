@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 import sfg.accessibility.VoiceEngineHelper;
 import sfg.accessibility.Voice_Engine;
+import sfg.devices.ArduinoHelper;
+import sfg.devices.Internet;
 import sfg.io.PreferencesHelper;
 import sfg.location.GPS;
 import sfg.sensors.SensorM;
@@ -74,6 +76,8 @@ public class MainActivity extends Activity implements OnInitListener {
 	private boolean hasStartedRunning = false;
 	private static final int TIME_UNTIL_END_RUN_PROMPT = 10 * 1000;
 	private long lastStepTakenAt;
+	private static final int TIME_BETWEEN_WEB_CALLS = 16;
+	private long webStartTime;
 
 	//ui/voice recog stuff
 	private boolean isAskingShareFacebook = false;
@@ -105,15 +109,21 @@ public class MainActivity extends Activity implements OnInitListener {
 
 			@Override
 			public void onSensorChanged(SensorEvent event) {
-				xAcc = event.values[0];
-				yAcc = event.values[1];
-				zAcc = event.values[2];
+				xAcc = Math.abs(event.values[0]);
+				yAcc = Math.abs(event.values[1]);
+				zAcc = Math.abs(event.values[2]);
 
 				xField.setText(df.format(event.values[0]) + ",");
 				yField.setText(df.format(event.values[1]) + ",");
 				zField.setText(df.format(event.values[2]));
 
-				if (!hasStartedRunning && zAcc > RUN_THRESHOLD) {// start the
+				float axis = zAcc;
+				if(xAcc > yAcc && xAcc > zAcc)
+					axis = xAcc;
+				else if(yAcc > xAcc && yAcc > zAcc)
+					axis = yAcc;
+				
+				if (!hasStartedRunning && axis > RUN_THRESHOLD) {// start the
 																	// run
 					startTime = System.currentTimeMillis();
 					hasStartedRunning = true;
@@ -121,7 +131,27 @@ public class MainActivity extends Activity implements OnInitListener {
 				}
 
 				if (hasStartedRunning && !isAskingEndRun) {
-					if (zAcc > RUN_THRESHOLD) {
+					if(webStartTime == 0)
+						webStartTime = System.currentTimeMillis();
+					if(System.currentTimeMillis() - webStartTime > TIME_BETWEEN_WEB_CALLS) {
+						webStartTime = 0;
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
+								String json = Internet.getJSON("http://iot.candybrie.com/arduino.php?get=1");
+								Log.i("sfg", json);
+//								ArduinoHelper helper = Internet.parseJSON(json);
+//								if(helper.distance != -1)
+//									speakText("Object "+helper.distance+" feet away");
+//								
+//								if(helper.direction.equals("left"))
+//									speakText("Turn left");
+//								else if(helper.direction.equals("right"))
+//									speakText("Turn right");
+							}
+						}).start();
+					}
+					if (axis > RUN_THRESHOLD) {
 						lastStepTakenAt = System.currentTimeMillis();
 					} else {
 						if (System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
@@ -284,7 +314,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						|| matches.contains("action")
 						|| matches.contains("auctions")) {
 					Log.i(TAG, "options");
-					speakText("commands,start run,pause ")
+					speakText("commands,start run,pause ");
 				} else if (matches.contains("start run")
 						|| matches.contains("start")
 						|| matches.contains("start to run")
@@ -327,21 +357,23 @@ public class MainActivity extends Activity implements OnInitListener {
 				} else if (matches.contains("no")) {
 					Log.i(TAG, "no");
 					isAskingEndRun = false;
-					isAskingShareFacebook = false;
 					lastStepTakenAt = System.currentTimeMillis();
-					promptForCommand();
+					if(isAskingShareFacebook) {
+						promptForCommand();
+						isAskingShareFacebook = false;
+					}
 				}
 
-				// else {
-				// Log.i(TAG, "nothing capture, starting again");
-				// mHandler.postDelayed(new Runnable() {
-				// public void run() {
-				// Log.i(TAG, "handler called");
-				// enableVoiceEngine();
-				// startVoiceRecognition();
-				// }
-				// }, 2000);
-				// }
+				else {
+					Log.i(TAG, "nothing capture, starting again");
+					mHandler.postDelayed(new Runnable() {
+						public void run() {
+							Log.i(TAG, "handler called");
+							enableVoiceEngine();
+							startVoiceRecognition();
+						}
+					}, 2000);
+				}
 				// Log.i(TAG, "nothing capture, starting again");
 				// mHandler.postDelayed(new Runnable() {
 				// public void run() {
@@ -477,6 +509,9 @@ public class MainActivity extends Activity implements OnInitListener {
 
 	@SuppressWarnings("deprecation")
 	public static void speakText(String text) {
+		if(textToSpeech == null)
+			return;
+		
 		if (textToSpeech.isSpeaking()) {
 			Log.i(TAG, "tts is speaking");
 			return;
@@ -550,7 +585,8 @@ public class MainActivity extends Activity implements OnInitListener {
 	} // end getShareIntent()
 	
 	public void startUpVoiceOver() {
-		speakText("Welcome to Run Fit Assist, please say a command, for a list of all options, say commands");
+		//speakText("Welcome to Run Fit Assist, please say a command, for a list of all options, say commands");
+		speakText("hi");
 	}
 	
 	public void promptForCommand() {

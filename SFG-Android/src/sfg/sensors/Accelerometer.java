@@ -2,10 +2,13 @@ package sfg.sensors;
 
 import java.text.DecimalFormat;
 
+import sfg.devices.Internet;
 import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.os.Handler;
+import android.util.Log;
 import android.widget.TextView;
 
 public class Accelerometer implements SensorEventListener {
@@ -18,6 +21,8 @@ public class Accelerometer implements SensorEventListener {
 	private boolean hasStartedRunning = false;
 	private static final int TIME_UNTIL_END_RUN_PROMPT = 10 * 1000;
 	private long lastStepTakenAt;
+	
+	//private Handler mHandler = new Handler();
 	
 	public Accelerometer(Activity activity, TextView x, TextView y, TextView z) {
 		this.activity = activity;
