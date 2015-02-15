@@ -25,27 +25,18 @@ public class PreferencesHelper {
 		this.editor.commit();
 	}
 	
-	public Boolean getPrefFirstLaunch(String strFirstLaunch) {
-		//get string from prefs or return false
-		return sharedPreferences.getBoolean("strFirstLaunch", false);
-		
-	}
-	
-	public void savePrefFirstLaunch(String strFirstLaunch, Boolean bool) {
-		editor.putBoolean(strFirstLaunch, bool);
+	public void addAchievement(String key, String value) {
+		editor.putString(key, value);
 		editor.commit();
 	}
-
-	public Boolean getPrefVoice(String strVoice) {
-		//get string from prefs or return false
-		return sharedPreferences.getBoolean("strVoice", false);
-		
-	}
 	
-	public void savePrefVoice(String strVoice, Boolean bool) {
-		editor.putBoolean(strVoice, bool);
-		editor.commit();
-	}	
+	public boolean hasAchievement(String key) {
+		String value = sharedPreferences.getString(key, null);
+		if(value != null)
+			return true;
+		else 
+			return false;
+	}
 	
 	
 } //end PreferenceHelper class

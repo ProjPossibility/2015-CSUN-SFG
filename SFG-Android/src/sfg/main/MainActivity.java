@@ -276,7 +276,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					Log.i(TAG, "Recognized words: " + matches.get(i));
 				}
 
-				// command set 1: TAKE PICTURE
+				
 				if (matches.contains("options") || matches.contains("command")
 						|| matches.contains("option")
 						|| matches.contains("auctions")
@@ -284,6 +284,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						|| matches.contains("action")
 						|| matches.contains("auctions")) {
 					Log.i(TAG, "options");
+					speakText("commands,start run,pause ")
 				} else if (matches.contains("start run")
 						|| matches.contains("start")
 						|| matches.contains("start to run")
