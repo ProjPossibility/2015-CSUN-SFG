@@ -141,7 +141,7 @@ public class MainActivity extends Activity implements OnInitListener {
 
 		mHandler.postDelayed(new Runnable() {
 			public void run() {
-				speakText("hELLO");
+				startUpVoiceOver();
 			}
 		}, 2000);
 	}
@@ -321,6 +321,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					else if(isAskingShareFacebook) {
 						sendFacebookMessage();
 						isAskingShareFacebook = false;
+						promptForCommand();
 					}
 
 				} else if (matches.contains("no")) {
@@ -328,6 +329,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					isAskingEndRun = false;
 					isAskingShareFacebook = false;
 					lastStepTakenAt = System.currentTimeMillis();
+					promptForCommand();
 				}
 
 				// else {
@@ -485,6 +487,8 @@ public class MainActivity extends Activity implements OnInitListener {
 	}
 
 	public void startTrackingMilieage() {
+		hasStartedRunning = false;
+		
 		// set up location tracking
 		TextView latituteField = (TextView) findViewById(R.id.latitudevalue);
 		TextView longitudeField = (TextView) findViewById(R.id.longitudevalue);
@@ -544,5 +548,13 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 		return null;
 	} // end getShareIntent()
+	
+	public void startUpVoiceOver() {
+		speakText("Welcome to Run Fit Assist, please say a command, for a list of all options, say commands");
+	}
+	
+	public void promptForCommand() {
+		speakText("Please say a command, for a list of all options, say commands");
+	}
 
 }
