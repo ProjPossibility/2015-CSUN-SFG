@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import sfg.accessibility.VoiceEngineHelper;
 import sfg.accessibility.Voice_Engine;
+import sfg.achievements.Achievements;
 import sfg.devices.ArduinoHelper;
 import sfg.devices.Internet;
 import sfg.io.PreferencesHelper;
@@ -27,6 +28,7 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
+import android.view.Window;
 import android.view.WindowManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -92,8 +94,9 @@ public class MainActivity extends Activity implements OnInitListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
-
+		
 		prefHelper = new PreferencesHelper(this);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -143,14 +146,14 @@ public class MainActivity extends Activity implements OnInitListener {
 							public void run() {
 								String json = Internet.getJSON("http://iot.candybrie.com/arduino.php?get=1");
 								Log.i("sfg", json);
-//								ArduinoHelper helper = Internet.parseJSON(json);
-//								if(helper.distance != -1)
-//									speakText("Object "+helper.distance+" feet away");
-//								
-//								if(helper.direction.equals("left"))
-//									speakText("Turn left");
-//								else if(helper.direction.equals("right"))
-//									speakText("Turn right");
+								ArduinoHelper helper = Internet.parseJSON(json);
+								if(helper.distance != -1)
+									speakText("Object "+helper.distance+" feet away");
+								
+								if(helper.direction.equals("left"))
+									speakText("Turn left");
+								else if(helper.direction.equals("right"))
+									speakText("Turn right");
 							}
 						}).start();
 					}
@@ -159,7 +162,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					} else {
 						if (System.currentTimeMillis() - lastStepTakenAt > TIME_UNTIL_END_RUN_PROMPT) {
 							isAskingEndRun = true;
-							speakText("Yo Homeboy you slowin down, you sure about that dawg?");
+							speakText("You are slowing down, do you want to stop?");
 						}
 					}
 				}
@@ -347,7 +350,6 @@ public class MainActivity extends Activity implements OnInitListener {
 						location.clearBuffer();
 						textToSpeachEndRun();
 						stopTrackingMilieage();
-						checkForAchievements();
 						isAskingShareFacebook = true;
 						isAskingEndRun = false;
 					}
@@ -366,7 +368,12 @@ public class MainActivity extends Activity implements OnInitListener {
 						isAskingShareFacebook = false;
 					}
 				}
-
+				else if (matches.contains("exit")
+						|| matches.contains("except")
+						|| matches.contains("quit")) {
+					finish();
+				}
+				
 				else {
 					Log.i(TAG, "nothing capture, starting again");
 					mHandler.postDelayed(new Runnable() {
@@ -398,10 +405,56 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 	}
 
-	private void checkForAchievements() {
-		if(distance > 400)
-			prefHelper.addAchievement(Achievements., value)
+	private String checkForAchievements() {
+		StringBuilder builder = new StringBuilder();
+		double distance = Double.parseDouble(distanceTraveled);
 		
+		prefHelper.clearPreferences(this);
+		
+		//if(distance > Achievements.MILESTONE_ONE) {
+		if(true) {
+			if(!prefHelper.hasAchievement(Achievements.DISTANCE_ONE)) {
+				prefHelper.addAchievement(Achievements.DISTANCE_ONE, true);
+				builder.append(Achievements.DISTANCE_ONE_DESCRIPTION+" achievement unlocked   ");
+			}
+		}
+		
+		//if(distance > Achievements.MILESTONE_TWO) {
+		if(true) {
+			if(!prefHelper.hasAchievement(Achievements.DISTANCE_TWO)) {
+				prefHelper.addAchievement(Achievements.DISTANCE_TWO, true);
+				builder.append(Achievements.DISTANCE_TWO_DESCRIPTION+" achievement unlocked");
+			}
+		}
+		
+		if(distance > Achievements.MILESTONE_THREE) {
+			if(!prefHelper.hasAchievement(Achievements.DISTANCE_THREE)) {
+				prefHelper.addAchievement(Achievements.DISTANCE_THREE, true);
+				builder.append(Achievements.DISTANCE_THREE_DESCRIPTION+" achievement unlocked");
+			}
+		}
+		
+		if(distance > Achievements.MILESTONE_FOUR) {
+			if(!prefHelper.hasAchievement(Achievements.DISTANCE_FOUR)) {
+				prefHelper.addAchievement(Achievements.DISTANCE_FOUR, true);
+				builder.append(Achievements.DISTANCE_FOUR_DESCRIPTION+" achievement unlocked");
+			}
+		}
+		
+		if(distance > Achievements.MILESTONE_DEMO_ONE) {
+			if(!prefHelper.hasAchievement(Achievements.DISTANCE_DEMO_ONE)) {
+				prefHelper.addAchievement(Achievements.DISTANCE_DEMO_ONE, true);
+				speakText(Achievements.DISTANCE_DEMO_ONE_DESCRIPTION+" achievement unlocked");
+			}
+		}
+		
+		if(distance > Achievements.MILESTONE_DEMO_TWO) {
+			if(!prefHelper.hasAchievement(Achievements.DISTANCE_DEMO_TWO)) {
+				prefHelper.addAchievement(Achievements.DISTANCE_DEMO_TWO, true);
+				speakText(Achievements.DISTANCE_DEMO_TWO_DESCRIPTION+" achievement unlocked");
+			}
+		}
+		return builder.toString();
 	}
 
 	private void textToSpeachEndRun() {
@@ -422,7 +475,8 @@ public class MainActivity extends Activity implements OnInitListener {
 		else {
 			timeOfRun = ", " + totalMinutes + " minutes and " + totalSeconds + " seconds";
 		}
-		speakText("You have run " + distanceTraveled + " meters in " + timeOfRun + "Would you like to share results to a friend on FaceBook?");
+		String achievementsString = checkForAchievements();
+		speakText("You have run " + distanceTraveled + " meters in " + timeOfRun + achievementsString + "Would you like to share results to a friend on FaceBook?");
 		
 	}
 
@@ -523,6 +577,7 @@ public class MainActivity extends Activity implements OnInitListener {
 		
 		if (textToSpeech.isSpeaking()) {
 			Log.i(TAG, "tts is speaking");
+			textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, map);
 			return;
 		} else {
 			Log.i(TAG, "else");

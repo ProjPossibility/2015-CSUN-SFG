@@ -59,7 +59,13 @@ public class Voice_Engine extends Activity {
         if (VoiceEngineHelper.getVoiceController() == false) {
             speakingInterrupted = false;
             sr.setRecognitionListener(new listener());
-            startListening();
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); //LANGUAGE_MODEL_WEB_SEARCH
+            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplication().getClass().getName());
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Please say a command");
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 4000);
+            sr.startListening(intent);
         } else {
             speakingInterrupted = false;
         	sr.stopListening();
@@ -68,16 +74,6 @@ public class Voice_Engine extends Activity {
         }
 
     } //end onCreate
-
-    public void startListening() {
-    	Intent voiceOptions = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        voiceOptions.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); //LANGUAGE_MODEL_WEB_SEARCH
-        voiceOptions.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplication().getClass().getName());
-        voiceOptions.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
-        voiceOptions.putExtra(RecognizerIntent.EXTRA_PROMPT, "Please say a command");
-        voiceOptions.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 4000);
-        sr.startListening(voiceOptions);
-    }
     
      /**
      *

@@ -25,17 +25,13 @@ public class PreferencesHelper {
 		this.editor.commit();
 	}
 	
-	public void addAchievement(String key, String value) {
-		editor.putString(key, value);
-		editor.commit();
+	public void addAchievement(String key, boolean isUnlocked) {
+		editor.putBoolean(key, isUnlocked);
+		editor.apply();
 	}
 	
 	public boolean hasAchievement(String key) {
-		String value = sharedPreferences.getString(key, null);
-		if(value != null)
-			return true;
-		else 
-			return false;
+		return sharedPreferences.getBoolean(key, false);
 	}
 	
 	
