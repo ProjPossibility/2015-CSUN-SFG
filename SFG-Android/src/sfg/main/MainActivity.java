@@ -411,16 +411,16 @@ public class MainActivity extends Activity implements OnInitListener {
 		
 		prefHelper.clearPreferences(this);
 		
-		//if(distance > Achievements.MILESTONE_ONE) {
-		if(true) {
+		if(distance > Achievements.MILESTONE_ONE) {
+		//if(true) {
 			if(!prefHelper.hasAchievement(Achievements.DISTANCE_ONE)) {
 				prefHelper.addAchievement(Achievements.DISTANCE_ONE, true);
-				builder.append(Achievements.DISTANCE_ONE_DESCRIPTION+" achievement unlocked   ");
+				builder.append(""+Achievements.DISTANCE_ONE_DESCRIPTION+" achievement unlocked   ");
 			}
 		}
 		
-		//if(distance > Achievements.MILESTONE_TWO) {
-		if(true) {
+		if(distance > Achievements.MILESTONE_TWO) {
+		//if(true) {
 			if(!prefHelper.hasAchievement(Achievements.DISTANCE_TWO)) {
 				prefHelper.addAchievement(Achievements.DISTANCE_TWO, true);
 				builder.append(Achievements.DISTANCE_TWO_DESCRIPTION+" achievement unlocked");
@@ -649,8 +649,8 @@ public class MainActivity extends Activity implements OnInitListener {
 	} // end getShareIntent()
 	
 	public void startUpVoiceOver() {
-		//speakText("Welcome to Run Fit Assist, please say a command, for a list of all options, say commands");
-		speakText("hi");
+		speakText("Welcome to Run Fit Assist, please say a command, for a list of all options, say commands");
+		//speakText("hi");
 	}
 	
 	public void promptForCommand() {

@@ -23,4 +23,6 @@ public class Achievements {
 	public static final String DISTANCE_DEMO_ONE_DESCRIPTION = MILESTONE_DEMO_ONE + " meters";
 	public static final String DISTANCE_DEMO_TWO_DESCRIPTION = MILESTONE_DEMO_TWO + " meters";
 	
+	public static final String TOTAL_DISTANCE = "totalDistance";
+	
 }
